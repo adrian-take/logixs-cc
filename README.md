@@ -14,7 +14,7 @@ _Your assignment:_
 * Presents results to the user, to show highlights of the content in a human readable format  
      
 2 - Implement infrastructure code (Terraform) that can be used to declare the necessary infrastructure (GCP):     
-3 - Describe/implement any additional missing component that would be required to complete a minimal CI/CD setup that could be use to reliably and repeadetely maintain/update the application.  
+3 - Describe (and as much as possible implement) any additional missing component that would be required to complete the most minimal CI/CD setup that could be use to reliably and repeadetely maintain/update the application.  
      
      
 _Note and tips:_    
