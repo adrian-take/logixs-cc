@@ -1,4 +1,4 @@
-# Assignment for Cloud Engineer assignment
+# Assignment for Cloud Engineer
 
 ## Background
 
@@ -54,9 +54,47 @@ and destroy the application. You are allowed to apply any related best practice 
 
 # Processing of C3D files
 
-TBD, see comments
-<!-- Explain how to process the C3D File and provide an example -->
-<!-- Explain what output we expect for the processing (e.g.: a 200 OK if success or 400/500 depending on cases) -->
+* An example c3d file is provided in https://github.com/moveshelf/cloud-eng-assignment-1/blob/main/example_file.c3d.
+* The file is converted to JSON using https://c3d.readthedocs.io/en/stable/, see below for example code to extract data and convert to json.
+* The processing should return the status, e.g. a 200 OK if success or 400/500 on failure.
+
+```py
+
+import c3d
+import json
+
+reader = c3d.Reader(open(r'<path>\example_file.c3d', 'rb'))
+
+labels = reader.point_labels
+fs = reader.point_rate
+
+# build dictionary with data
+dataDict = {}
+for label in labels:
+    dataDict[label] = []
+
+# fill point data for 'Angles'
+for i, points, analog in reader.read_frames():
+    for j, label in enumerate(labels):
+        if 'Angle' in label:
+            frame = {
+                'time': float(i/fs),
+                'x': float(points[j,0]),
+                'y': float(points[j,1]),
+                'z': float(points[j,2])
+            }
+            dataDict[label].append(frame)
+
+# prepare for json
+outData = {'data': []}
+for label in labels:
+    outData['data'].append({'label': label, 'values': dataDict[label]})
+
+# write to json
+with open(r'<path>\example_file.json', 'w') as json_file:
+    json.dump(outData, json_file)
+
+```
 
 # Note and tips
 
