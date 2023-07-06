@@ -7,7 +7,7 @@ The history of movement analysis’ HW technologies, in combination with the lar
 Moveshelf is working to bridge the technological gap between measurement HW devices and modern web application, for digital healthcare.
 As a result, our team is often challenged with working with such existing binary data formats and C/C++ libraries developed as interfaces to abstract complexity in the interaction.
 
-A package to process C3D files in Python is [**py-c3d**](https://github.com/EmbodiedCognition/py-c3d).
+A package to process C3D files in Python is [**c3d**]( https://c3d.readthedocs.io/en/stable/).
 
 # Your assignment
 
