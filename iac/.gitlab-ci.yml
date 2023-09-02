@@ -1,0 +1,110 @@
+stages:
+  - init-to-plan
+  - apply
+  - init-to-destroy
+  - destroy
+
+image:
+    name: hashicorp/terraform
+    entrypoint:
+        - "/usr/bin/env"
+        - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+############################
+########### PLAN ###########
+############################
+
+.init-to-plan:
+    stage: init-to-plan
+    before_script:
+        - terraform --version
+        - terraform init -backend-config=${TFVARS_PATH}/backend.tf
+        - terraform validate
+    script:
+        - terraform plan --var-file="${TFVARS_PATH}/global.tfvars" -out "terraform.plan"
+    artifacts:
+        paths:
+            - .terraform
+            - terraform.plan
+            - .terraform.lock.hcl
+
+init-to-plan-env:
+    variables:
+        TFVARS_PATH: env
+    extends:
+        - .init-to-plan
+    environment: env
+
+#############################
+########### APPLY ###########
+#############################
+
+.apply:
+    stage: apply
+    before_script:
+        - terraform --version
+    script:
+        - terraform apply "terraform.plan"
+    when: manual
+    timeout: 6h
+    artifacts:
+        paths:
+            - .terraform
+            - terraform.plan
+            - .terraform.lock.hcl
+
+apply-env:
+    extends:
+        - .apply
+    environment: env
+
+####################################
+########### PLAN DESTROY ###########
+####################################
+
+.init-to-destroy:
+    stage: init-to-destroy
+    before_script:
+        - terraform --version
+        - terraform validate
+    script:
+        - terraform plan -destroy -var-file="${TFVARS_PATH}/global.tfvars" -out "terraform.plan"
+    when: manual
+    timeout: 2h
+    artifacts:
+        paths:
+            - .terraform
+            - terraform.plan
+            - .terraform.lock.hcl
+
+init-to-destroy-env:
+    variables:
+        TFVARS_PATH: env
+    extends:
+        - .init-to-destroy
+    environment: env
+    dependencies:
+        - init-to-plan-env
+
+###############################
+########### DESTROY ###########
+###############################
+
+.destroy:
+    stage: destroy
+    before_script:
+        - terraform --version
+    script:
+        - terraform apply "terraform.plan"
+    when: manual
+    timeout: 24h
+    artifacts:
+        paths:
+            - .terraform
+            - terraform.plan
+            - .terraform.lock.hcl
+
+destroy-env:
+    extends:
+        - .destroy
+    environment: env
