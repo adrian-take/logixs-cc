@@ -1,21 +1,58 @@
 swagger: '2.0'
 info:
-  title: API_ID optional-string
-  description: Sample API on API Gateway with a Google Cloud Functions backend
+  title: Moveshelf CE API
+  description: API for processing of C3D files
   version: 1.0.0
 schemes:
   - https
 produces:
   - application/json
 paths:
-  /hello:
-    get:
-      summary: Greet a user
-      operationId: hello
-      x-google-backend:
-        address: https://GCP_REGION-PROJECT_ID.cloudfunctions.net/helloGET
-      responses:
-        '200':
-          description: A successful response
-          schema:
-            type: string
+  /c3d:
+    /store:
+      get:
+        summary: Upload a C3D file
+        operationId: store
+        x-google-backend:
+          address: https://europe-west2-MOVESHELF-CE.cloudfunctions.net/ms-function-c3d-upload-api
+        responses:
+          '200':
+            description: C3D file successfully uploaded
+            schema:
+              type: string
+            security:
+              - auth0_jwt: []
+    /process:
+      post:
+        summary: Process a C3D file
+        operationId: process
+        x-google-backend:
+          address: https://europe-west2-MOVESHELF-CE.cloudfunctions.net/ms-function-c3d-parse-api
+        responses:
+          '200':
+            description: C3D file successfully processed
+            schema:
+              type: string
+            security:
+              - auth0_jwt: []
+    /json:
+      post:
+        summary: Retrieve a processed C3D file
+        operationId: json
+        x-google-backend:
+          address: https://europe-west2-MOVESHELF-CE.cloudfunctions.net/ms-function-json-getter-api
+        responses:
+          '200':
+            description: JSON file successfully retrieved
+            schema:
+              type: string
+            security:
+              - auth0_jwt: []
+securityDefinitions:
+    auth0_jwt:
+        authorizationUrl: ""
+        flow: "implicit"
+        type: "oauth2"
+        x-google-issuer: "https://securetoken.google.com/MOVESHELF-CE"
+        x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+        x-google-audiences: "MOVESHELF-CE"
