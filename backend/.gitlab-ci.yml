@@ -1,0 +1,82 @@
+workflow: # Limit pipeline execution to web
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+#  - test
+#  - upload
+  - deploy
+
+#########
+# BUILD #
+#########
+.build:
+  image:
+    name: public.ecr.aws/docker/library/golang:latest
+    entrypoint: [""]
+  stage: build
+
+build-dev:
+  extends:
+    - .build
+  script:
+    - env GOOS=linux go build -ldflags="-s -w" -o bin/${SERVICE} ${SERVICE}/main.go
+  environment: dev
+  only:
+    - develop
+    - /^feature\/.*$/
+
+build-prod:
+  extends:
+    - .build
+  script:
+    - env GOOS=linux go build -ldflags="-s -w" -o bin/${SERVICE} ${SERVICE}/main.go
+  environment: prod
+  only:
+    - main
+    - /^version\/.*$/
+
+##########
+# DEPLOY #
+##########
+.deploy:
+  image:
+    name: public.ecr.aws/lambda/nodejs:latest
+    entrypoint: [""]
+  stage: deploy
+  variables:
+    CI_SERVERLESS_PROVIDER: aws
+    WORKDIR: pwd
+  before_script:
+    - cd ./${SERVICE}
+    - npm install -g serverless
+    - serverless plugin install -n serverless-add-api-key
+    - serverless config credentials --provider ${CI_SERVERLESS_PROVIDER} --key ${AWS_ACCESS_KEY_ID} --secret ${AWS_SECRET_ACCESS_KEY}
+
+deploy-dev:
+  extends:
+    - .deploy
+  variables:
+    CI_TARGET_ENV: dev
+  script:
+    - make
+    - sls deploy --stage ${CI_TARGET_ENV}
+  environment: dev
+  only:
+    - develop
+    - /^feature\/.*$/
+
+deploy-prod:
+  extends:
+    - .deploy
+  variables:
+    CI_TARGET_ENV: prod
+  script:
+    - make
+    - sls deploy --stage ${CI_TARGET_ENV}
+  environment: prod
+  when: manual
+  only:
+    - main
+    - /^version\/.*$/

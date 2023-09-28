@@ -1,0 +1,37 @@
+## For full config options, check the docs:
+##    docs.serverless.com
+
+service: ir-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  region: eu-central-1
+
+#
+# Create an Api Gateway resource in AWS and store the necessary ids in CloudFormation for other services
+#
+
+resources:
+  Resources:
+    irApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: irApi
+
+  Outputs:
+    irApiId:
+      Value:
+        Ref: irApi
+      Export:
+        Name: irApi-restApiId
+
+    irApiRootResourceId:
+      Value:
+        Fn::GetAtt:
+          - irApi
+          - RootResourceId
+      Export:
+        Name: irApi-rootResourceId

@@ -1,0 +1,37 @@
+## For full config options, check the docs:
+##    docs.serverless.com
+
+service: sso-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  region: eu-central-1
+
+#
+# Create an Api Gateway resource in AWS and store the necessary ids in CloudFormation for other services
+#
+
+resources:
+  Resources:
+    ssoApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: ssoApi
+
+  Outputs:
+    ssoApiId:
+      Value:
+        Ref: ssoApi
+      Export:
+        Name: ssoApi-restApiId
+
+    ssoApiRootResourceId:
+      Value:
+        Fn::GetAtt:
+          - ssoApi
+          - RootResourceId
+      Export:
+        Name: ssoApi-rootResourceId

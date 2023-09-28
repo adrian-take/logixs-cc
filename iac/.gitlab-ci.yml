@@ -18,22 +18,29 @@ image:
     stage: init-to-plan
     before_script:
         - terraform --version
-        - terraform init -backend-config=${TFVARS_PATH}/backend.tf
+        - terraform init -backend-config=${TFVARS_PATH}_backend.tf
         - terraform validate
     script:
-        - terraform plan --var-file="${TFVARS_PATH}/global.tfvars" -out "terraform.plan"
+        - terraform plan --var-file="${TFVARS_PATH}.tfvars" -out "terraform.plan"
     artifacts:
         paths:
             - .terraform
             - terraform.plan
             - .terraform.lock.hcl
 
-init-to-plan-env:
+init-to-plan-dev:
     variables:
-        TFVARS_PATH: env
+        TFVARS_PATH: env/dev
     extends:
         - .init-to-plan
-    environment: env
+    environment: dev
+
+init-to-plan-prod:
+    variables:
+        TFVARS_PATH: env/prod
+    extends:
+        - .init-to-plan
+    environment: prod
 
 #############################
 ########### APPLY ###########
@@ -58,6 +65,11 @@ apply-env:
         - .apply
     environment: env
 
+apply-prod:
+    extends:
+        - .apply
+    environment: prod
+
 ####################################
 ########### PLAN DESTROY ###########
 ####################################
@@ -68,7 +80,7 @@ apply-env:
         - terraform --version
         - terraform validate
     script:
-        - terraform plan -destroy -var-file="${TFVARS_PATH}/global.tfvars" -out "terraform.plan"
+        - terraform plan -destroy -var-file="${TFVARS_PATH}.tfvars" -out "terraform.plan"
     when: manual
     timeout: 2h
     artifacts:
@@ -77,14 +89,23 @@ apply-env:
             - terraform.plan
             - .terraform.lock.hcl
 
-init-to-destroy-env:
+init-to-destroy-dev:
     variables:
-        TFVARS_PATH: env
+        TFVARS_PATH: env/dev
     extends:
         - .init-to-destroy
-    environment: env
+    environment: dev
     dependencies:
-        - init-to-plan-env
+        - init-to-plan-dev
+
+init-to-destroy-prod:
+    variables:
+        TFVARS_PATH: env/prod
+    extends:
+        - .init-to-destroy
+    environment: prod
+    dependencies:
+        - init-to-plan-prod
 
 ###############################
 ########### DESTROY ###########
@@ -104,7 +125,12 @@ init-to-destroy-env:
             - terraform.plan
             - .terraform.lock.hcl
 
-destroy-env:
+destroy-dev:
     extends:
         - .destroy
-    environment: env
+    environment: dev
+
+destroy-prod:
+    extends:
+        - .destroy
+    environment: prod

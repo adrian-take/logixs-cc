@@ -1,0 +1,117 @@
+## For full config options, check the docs:
+##    docs.serverless.com
+
+service: incident-service
+frameworkVersion: '3'
+
+custom:
+  deployRegion:
+    dev: eu-central-1
+    prod: eu-west-1
+  
+  stage: ${opt:stage, self:provider.stage}
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  timeout: 10
+
+  region: ${self:custom.regionDeploy.${self:custom.stage}}
+  deploymentBucket: ${self:custom.stage}-service-deployments
+
+  apiGateway:
+    restApiId:
+      'Fn::ImportValue': irApi-restApiId
+    restApiRootResourceId:
+      'Fn::ImportValue': irApi-rootResourceId
+
+package:
+ exclude:
+   - ./**
+ include:
+   - ./bin/**
+
+functions:
+  addCommunity:
+    handler: bin/community/add
+    events:
+      - http:
+          path: /community
+          method: post
+          cors: true
+
+  getCommunity:
+    handler: bin/community/get
+    events:
+      - http:
+          path: /community/{id}
+          method: get
+          cors: true
+
+  updateCommunity:
+    handler: bin/community/update
+    events:
+      - http:
+          path: /community/{id}
+          method: post
+          cors: true
+
+  removeCommunity:
+   handler: bin/community/remove
+    events:
+      - http:
+          path: /community/{id}
+          method: delete
+          cors: true
+  
+  getCommunities:
+   handler: bin/community/getAll
+    events:
+      - http:
+          path: /community/all
+          method: get
+          cors: true
+
+  addIncident:
+    handler: bin/incident/add
+    events:
+      - http:
+          path: /incident
+          method: post
+          cors: true
+
+  updateIncident:
+    handler: bin/incident/update
+    events:
+      - http:
+          path: /incident/{id}
+          method: post
+          cors: true
+
+  removeIncident:
+    handler: bin/incident/remove
+    events:
+      - http:
+          path: /incident/{id}
+          method: delete
+          cors: true
+
+  getIncidentsByCommunity:
+    handler: bin/incident/getByCommunity
+    events:
+      - http:
+          path: /incidents/community/{id}
+          method: get
+          cors: true
+
+  getIncidentsByUser:
+    handler: bin/incident/getByUser
+    events:
+      - http:
+          path: /incidents/user/{id}
+          method: get
+          cors: true
+
+plugins:
+  - serverless-offline # adding the plugin to be able to run the offline emulation

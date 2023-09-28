@@ -1,2 +1,6 @@
-__pycache__
-__pycache__/*
+.$architecture.drawio.bkp
+iac/.terraform
+backend/bin
+backend/.bin
+backend/*/bin
+backend/*/.bin

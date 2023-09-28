@@ -1,105 +1,53 @@
-# Assignment for Cloud Engineer
+# Logixs CC
 
-## Background
+Welcome to the beginning of the Logixs CC project.
 
-The history of movement analysis’ HW technologies, in combination with the large amount of data captured by these measurement devices (high-frequency and multi-channel) brought HW manufactures to develop and maintain proprietary binary data formats, often open-sourcing their implementation to facilitate their adoption by the data science and research community. The most popular one is C3D (read more on https://www.c3d.org/).
+## Prerequisites
 
-Moveshelf is working to bridge the technological gap between measurement HW devices and modern web application, for digital healthcare.
-As a result, our team is often challenged with working with such existing binary data formats and C/C++ libraries developed as interfaces to abstract complexity in the interaction.
+- [Go](https://golang.org/dl/)
+- [AWS CLI](https://aws.amazon.com/cli/)
+- [Serverless Framework](https://www.serverless.com/)
 
-A package to process C3D files in Python is [**c3d**]( https://c3d.readthedocs.io/en/stable/).
+## Getting Started
 
-# Your assignment
+1. Clone this repository:
 
-Your task is to implement a basic cloud application that can:
+   ```shell
+   git clone https://github.com/adrian-take/logixs-cc.git
+   ```
 
-* Store C3D files
-* Process C3D files
-* Store processed C3D files' contents for later consumptions
+2. Build the Go binary:
 
-To achieve this, it is required to use Google cloud, leveraging only free tier services.
-<!-- Notes about how to create an account and what is needed, such as a valid card -->
+    ```shell
+    GOARCH=amd64 GOOS=linux go build -o main main.go
+    ```
 
-In particular, the application will be made of the following components:
+3. Deploy the Lambda function using the AWS CLI:
 
-* A service to store the C3D files (`c3d-storage`). It is fine to manually upload the C3D files in here, no need for automation
-* A service to store json files produced by the processing of the C3D files (`json-storage`)
-* A service that exposes a REST API that will,
-  1. Implement a basic endpoint written in Python that accepts the path for a C3D file that needs processing
-  2. Look for the C3D file path in `c3d-storage`, where the C3D file was previously uploaded
-  3. Parse the C3D file, extract its content and then save it as a human readable .json file in `json-storage`. See [Processing of C3D files](#processing-of-c3d-files) for details
-
-Additionally, the following restrictions must be satisfied:
-
-* For security reasons, the API can read (but not write) files from `c3d-storage`
-* For security reasons, the API can write (but not list nor read) files from `json-storage`
-
-The candidate is free to decide what services to use, granted they comply with the free tier.
-
-The candidate is free to decide what form of authentication to use for the services.
-
-Additionally, the candidate should provide a Terraform configuration to allow an easy way to create
-and destroy the application. You are allowed to apply any related best practice in doing so.
-**Keep in mind that we will use this Terraform configuration to test your submission.**
-
-## Bonus points
-
-* Produce a cloud architecture diagram that explains what services are used and how they are connected.
-  You can use any free tool, such as https://app.diagrams.net/
-* Implement a REST endpoint to allow the upload of a C3D file into `c3d-storage`
-* Implement a REST endpoint to allow the fetch of a processed C3D file from `json-storage`
-* Implement a local frontend that interfaces with the endpoint(s) and displays the json contents.
-  This should not be included in the Terraform configuration, a simple frontend that can be served
-  locally is sufficient (such as html+js)
-
-# Processing of C3D files
-
-* An example c3d file is provided in https://github.com/moveshelf/cloud-eng-assignment-1/blob/main/example_file.c3d.
-* The file is converted to JSON using https://c3d.readthedocs.io/en/stable/, see below for example code to extract data and convert to json.
-* The processing should return the status, e.g. a 200 OK if success or 400/500 on failure.
-
-```py
-
-import c3d
-import json
-
-reader = c3d.Reader(open(r'<path>\example_file.c3d', 'rb'))
-
-labels = reader.point_labels
-fs = reader.point_rate
-
-# build dictionary with data
-dataDict = {}
-for label in labels:
-    dataDict[label] = []
-
-# fill point data for 'Angles'
-for i, points, analog in reader.read_frames():
-    for j, label in enumerate(labels):
-        if 'Angle' in label:
-            frame = {
-                'time': float(i/fs),
-                'x': float(points[j,0]),
-                'y': float(points[j,1]),
-                'z': float(points[j,2])
-            }
-            dataDict[label].append(frame)
-
-# prepare for json
-outData = {'data': []}
-for label in labels:
-    outData['data'].append({'label': label, 'values': dataDict[label]})
-
-# write to json
-with open(r'<path>\example_file.json', 'w') as json_file:
-    json.dump(outData, json_file)
-
+```shell
+aws lambda create-function --function-name MyGoLambda \
+  --zip-file fileb://./main.zip --handler main \
+  --runtime go1.x --role arn:aws:iam::your-account-id:role/your-role-name
 ```
 
-# Note and tips
+4. Invoke the Lambda function:
 
-* The assignment is expected to be completed within 8 hours.
-* It’s OK to spend extra time but it’s also OK - and expected - that candidates prioritize work and complete a "Proof-of-Concept" in the simplest way possible.
-* Boilerplate code and helper libraries that can potentially reduce complexity of the assignment, while achieving the mentioned goal, are welcome.
-* You are free – and encouraged – to adopt any best practices related to software development, used frameworks/libraries and tooling you know
-* Don't overcomplicate the infrastructure, stick to basic services available in the free tier
+```shell
+aws lambda invoke --function-name MyGoLambda output.txt
+```
+
+## Customization
+
+* Modify **\`main.go\`** to implement your Lambda function logic.
+* Update the **\`serverless.yml\`** for additional AWS Lambda configuration.
+* Add environment variables and triggers as needed.
+
+## Deployment
+
+Use a serverless framework like [AWS SAM](https://aws.amazon.com/serverless/sam/) or [Serverless Framework](https://www.serverless.com/) for more advanced deployments and automation.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit/) file for details.
+
+Please make sure to customize it according to your project's specific details, folder structure, and requirements.
