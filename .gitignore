@@ -1,4 +1,5 @@
 .$architecture.drawio.bkp
+.DS_Store
 iac/.terraform
 backend/bin
 backend/.bin
